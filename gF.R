@@ -14,11 +14,16 @@ gf <- function(q,p){
   }
   list(poly.x=poly.x,poly=poly)
   
+  
   ### Now, we need to construct the cyclic group F[x] given the irreducible polynomial "poly"
-  F <- c(rep(0,q^p)) #initialize the vector F
-  for(j in 0:(q^p-1)){
-    #F[j] <- polynomial(coef = c(rep(j,p)))
-    F[j] <- c(rep(0,3))  
-  }
+  F <- matrix(ncol=p,nrow=q^p) #initialize the vector F
+  
+  
+  seqs = lapply(1:p, function(x) {rep((1:q) - 1, each = q^(x - 1))} )
+  F <- do.call(cbind, seqs)
+  
+  ### Constructs an unordered F[x], where each row contains the coefficients of the polynomial
+  #F <- as.matrix(expand.grid(lapply(1:p, function(i) 1:q-1L)))
+  
   F
 }
