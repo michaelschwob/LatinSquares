@@ -12,7 +12,6 @@ gf <- function(q,p){
       }
     }
   }
-  list(poly.x=poly.x,poly=poly)
   
   
   ### Now, we need to construct the cyclic group F[x] given the irreducible polynomial "poly"
@@ -22,8 +21,78 @@ gf <- function(q,p){
   seqs = lapply(1:p, function(x) {rep((1:q) - 1, each = q^(x - 1))} )
   F <- do.call(cbind, seqs)
   
-  ### Constructs an unordered F[x], where each row contains the coefficients of the polynomial
-  #F <- as.matrix(expand.grid(lapply(1:p, function(i) 1:q-1L)))
+  ### Constructs an F[x], where each row contains the coefficients of the polynomial
+  F <- as.matrix(expand.grid(lapply(1:p, function(i) 1:q-1L)))
   
-  F
+  ### Here's another way to accomplish the same thing
+  # seqs = lapply(1:p, function(x) {rep((1:q) - 1, each = q^(x - 1))} )
+  # F <- do.call(cbind, seqs)
+  
+  #We need to save a list of coefficients (loc) to coerce into a polynomial
+  #loc <- polynomial(coef=F[7,])
+  
+  ### We need to solve for x^p using the irreducible polynomial above 
+  ### https://rosettacode.org/wiki/Polynomial_long_division#R
+  polylongdiv <- function(n,d) {
+    gd <- length(d)
+    pv <- vector("numeric", length(n))
+    pv[1:gd] <- d
+    if ( length(n) >= gd ) {
+      q <- c()
+      while ( length(n) >= gd ) {
+        q <- c(q, n[1]/pv[1])
+        n <- n - pv * (n[1]/pv[1])
+        n <- n[2:length(n)]
+        pv <- pv[1:(length(pv)-1)]
+      }
+      list(q=q, r=n)
+    } else {
+      list(q=c(0), r=n)
+    }
+  }
+  
+  ### This is a utility function to print the polynomial.
+  # print.polynomial <- function(p) {
+  #   i <- length(p)-1
+  #   for(a in p) {
+  #     if ( i == 0 ) {
+  #       cat(a, "\n")
+  #     } else {
+  #       cat(a, "x^", i, " + ", sep="")
+  #     }
+  #     i <- i - 1
+  #   }
+  # }
+  
+  
+  ### Now we need to check for a generator
+  for(i in (q+1):(q^p/2)){ #we can skip the first 1:q, since those are constants, and we don't need to calculate the second half of the set
+    posgen <- F[i,] 
+  }
+  
+  ### Now we construct the orthogonal mate Latin Square, which must be a List, since it's a 3-dimensional matrix
+  gen <- c(0,1)
+  LS <- list()
+  sub <- 1 #this will change later
+  
+  for(i in 1:(q^p)){ #this is working well
+    LS[[i]] <- F[i,]%%q
+  }
+  
+  for(k in (q^p+1):q^(2*p)){ #y
+    for(i in 1:q^p){
+      for(j in 0:(q-2)){
+        LS[[k]] <- (F[i,] + gen^(j+sub))%%q
+      }
+    }
+  }
+  
+  # for(i in (q^p+1):((q^p)*p)){ #row indexing
+  #   for(j in 1:(q^p)){ #column indexing
+  #     LS[[i]] <- (F[j,] + gen^(sub+(i-1)))%%q
+  #   }
+  # }
+  
+  list(poly.x=poly.x,poly=poly,F=F,posgen=posgen,LS=LS)
 }
+
